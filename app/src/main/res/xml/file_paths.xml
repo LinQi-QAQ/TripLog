@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- 插桩测试把临时备份文件放在 cache 目录，需要暴露给 FileProvider -->
+    <cache-path
+        name="backups"
+        path="." />
+    <!-- 导出的车票图在 files/tickets，允许读取 -->
+    <files-path
+        name="tickets"
+        path="tickets/" />
+</paths>
