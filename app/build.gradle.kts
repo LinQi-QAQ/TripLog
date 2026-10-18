@@ -24,7 +24,7 @@ android {
         minSdk = 26
         targetSdk = 36
         versionCode = 1
-        versionName = "0.1.0"
+        versionName = "1.0.0"
         // 插桩测试的运行器。不写这一行，测试 APK 里不会注册 instrumentation，
         // adb am instrument 会报 "Unable to find instrumentation info"。
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
