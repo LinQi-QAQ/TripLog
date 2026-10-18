@@ -34,6 +34,13 @@
 | 密钥存储 | EncryptedSharedPreferences（AES256_GCM） |
 | 最低版本 | Android 8.0（API 26） |
 
+## 下载安装
+
+不想自己编译，直接去 [Releases](../../releases) 页面下最新的 APK，传到手机上点开就能装。
+
+安卓默认不让装来源不明的应用，第一次装的时候会拦一下，按提示跳过去允许一下就行。
+以后更新直接装新包，数据不会丢。
+
 ## 自己构建
 
 需要 Android Studio 与 Android SDK。
@@ -105,6 +112,37 @@ app/src/main/java/com/linqi/triplog/
 ```
 
 更详细的开发笔记见 [docs/开发笔记.md](docs/开发笔记.md)。
+
+## 发新版
+
+打一个 `v` 开头的标签推上去，GitHub 会自动编译、签名、挂到 Releases，不用在自己电脑上打包。
+
+```bash
+# 1. 先把 versionName 改成新版本号，比如 1.1.0
+# 2. 提交推送
+git add -A && git commit -m "chore: 版本号 1.1.0"
+git push origin main
+
+# 3. 打标签并推送，这一步会触发自动构建
+git tag v1.1.0
+git push origin v1.1.0
+```
+
+然后去仓库的 Actions 页面看构建进度，绿了之后 Releases 页面就多出一条，APK 挂在里面。
+
+自动构建需要仓库 Settings → Secrets and variables → Actions 里配好四个密钥，
+缺了会构建失败。密钥库转 base64 的方法：
+
+```bash
+# Linux / macOS
+base64 -i release.jks | tr -d '\n' | pbcopy
+
+# Windows PowerShell
+[Convert]::ToBase64String([IO.File]::ReadAllBytes("release.jks")) | Set-Clipboard
+```
+
+把复制到剪贴板的那串填进 `KEYSTORE_BASE64`，另外三个
+`KEYSTORE_PASSWORD`、`KEY_ALIAS`、`KEY_PASSWORD` 按密钥库实际信息填。
 
 ## 许可
 
