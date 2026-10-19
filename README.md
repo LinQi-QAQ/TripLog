@@ -13,8 +13,8 @@
 
 ## 功能
 
-- **票据识别**。选图或拍照后，图先压到长边 1568px、JPEG 质量 85 存本地，并按 EXIF 校正方向；识别时读这份本地副本，编成 base64 data URL 送进多模态模型。模型返回 JSON，解析分三层：先剥掉 ```` ```json ```` 围栏和前后废话，再逐字段宽容取值（该给字符串的地方给了对象就转 JSON 文本塞进备注），全失败则保留原文让你手填
-- **行程管理**。Room 持久化，列表按出发时间分「即将出发」和「历史」两段，前者正序让最近的排最上。支持全文搜索、按交通工具筛、左滑删除、长按多选
+- **票据识别**。选图或拍照后，先把图压到长边 1568px、JPEG 质量 85 存到本地，顺手按 EXIF 把方向校正；识别时读这份本地副本，转成 base64 发给多模态模型。模型返回 JSON，解析分三层：先剥掉 ```` ```json ```` 围栏和前后废话，再逐字段宽容取值（该给字符串的地方给了对象，就转成 JSON 文本塞进备注），实在解析不出来就保留原文，你手动填
+- **行程管理**。Room 持久化，列表按出发时间分成「即将出发」和「历史」两段，即将出发的按时间正序，最近的排在最上面。支持全文搜索、按交通工具筛选、左滑删除、长按多选
 - **出发提醒**。AlarmManager 精确闹钟，可选提前 1 小时 / 3 小时 / 1 天，也可关掉；`BOOT_COMPLETED` 广播里重建全部闹钟，重启不丢
 - **出行统计**。年度总览、交通工具占比、常去城市 Top N、月度明细、总花费。纯 Kotlin 计算，不碰 Android API，单测直接跑
 - **备份**。整个库连同票据图打包成 zip，内含 `data.json` 加 `tickets/` 目录，走 SAF 读写，换机可用
@@ -89,7 +89,7 @@ PKCS12 格式下 `keyPassword` 会被强制与 `storePassword` 一致，keytool 
 - **模型名**：必须支持图片输入。如 `deepseek-vl2`、`qwen-vl-max-latest`、`gpt-4o-mini`
 - **API Key**：加密落到本机，不明文存盘
 
-系统提示词写在 `SettingsStore.DEFAULT_SYSTEM_PROMPT`，应用内可改。请求体是标准 OpenAI 多模态格式（`messages[].content` 里放 `text` 和 `image_url` 两种 part），`temperature` 固定 0。
+系统提示词写在 `SettingsStore.DEFAULT_SYSTEM_PROMPT`，应用内可改。请求体是标准 OpenAI 多模态格式（`messages[].content` 里同时放 `text` 和 `image_url`），`temperature` 固定为 0。
 
 ## 测试
 
