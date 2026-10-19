@@ -25,6 +25,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # 建 Release 需要给 GITHUB_TOKEN 写权限，否则最后一步 403
+    permissions:
+      contents: write
 
     steps:
       - name: 拉取代码
