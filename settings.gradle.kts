@@ -9,8 +9,6 @@ pluginManagement {
         }
         mavenCentral()
         gradlePluginPortal()
-        maven("https://mirrors.cloud.tencent.com/gradle/")
-        maven("https://mirrors.huaweicloud.com/repository/maven/")
     }
 }
 
@@ -19,8 +17,6 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven("https://mirrors.cloud.tencent.com/nexus/repository/maven-public/")
-        maven("https://repo.huaweicloud.com/repository/maven/")
     }
 }
 
