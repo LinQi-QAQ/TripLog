@@ -14,6 +14,29 @@ interface TripDao {
     @androidx.room.Query("SELECT * FROM trips ORDER BY departTime IS NULL, departTime ASC, createdAt DESC")
     fun observeAll(): Flow<List<Trip>>
 
+    /**
+     * 带搜索和类型筛选的查询，过滤交给 SQLite 做，不在内存里筛。
+     * keyword 传空串表示不筛关键词；vehicleType 传 null 表示不限类型。
+     * 用 LIKE 配 % 通配，SQLite 的 LIKE 对 ASCII 不区分大小写，
+     * 中文本身没有大小写概念，所以不需要额外 lower()。
+     */
+    @androidx.room.Query(
+        """
+        SELECT * FROM trips
+        WHERE (:vehicleType IS NULL OR vehicleType = :vehicleType)
+          AND (
+                :keyword = ''
+                OR fromStation LIKE '%' || :keyword || '%'
+                OR toStation   LIKE '%' || :keyword || '%'
+                OR number      LIKE '%' || :keyword || '%'
+                OR note        LIKE '%' || :keyword || '%'
+                OR passenger   LIKE '%' || :keyword || '%'
+              )
+        ORDER BY departTime IS NULL, departTime ASC, createdAt DESC
+        """
+    )
+    fun observeFiltered(keyword: String, vehicleType: String?): Flow<List<Trip>>
+
     @androidx.room.Query("SELECT * FROM trips WHERE id = :id")
     fun observeById(id: Long): Flow<Trip?>
 

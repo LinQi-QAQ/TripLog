@@ -1,4 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">出行记</string>
+
+    <!-- 桌面小组件 -->
+    <string name="widget_label">下一趟行程</string>
+    <string name="widget_description">在桌面显示最近一趟即将出发的行程</string>
+    <string name="widget_empty">暂无即将出发的行程</string>
+    <string name="widget_icon_desc">交通工具</string>
 </resources>

@@ -30,6 +30,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -55,6 +56,7 @@ import com.linqi.triplog.remind.departLabel
 import com.linqi.triplog.ui.components.FormField
 import com.linqi.triplog.ui.components.LoadingBox
 import com.linqi.triplog.ui.components.PrimaryButton
+import com.linqi.triplog.ui.components.RemindFormat
 import com.linqi.triplog.ui.components.VehicleIcon
 import com.linqi.triplog.ui.components.vehicleName
 import java.time.Instant
@@ -78,6 +80,8 @@ fun TripEditScreen(
     var pendingTimeField by remember { mutableStateOf<String?>(null) }
     var pendingTimeTargetDepart by remember { mutableStateOf(true) }
     var pendingDateMillis by remember { mutableStateOf<Long?>(null) }
+    // 自定义提醒时间的输入弹窗
+    var showCustomRemindDialog by remember { mutableStateOf(false) }
 
     val pickMedia = rememberLauncherForActivityResult(
         ActivityResultContracts.PickVisualMedia()
@@ -280,8 +284,14 @@ fun TripEditScreen(
             // 提醒
             Text("出发提醒", style = MaterialTheme.typography.labelLarge)
             Spacer(Modifier.height(8.dp))
+
+            // 预设选项。自定义的分钟数不在这个表里，所以要单独判断是否选中。
+            val presets = listOf(0 to "不提醒", 60 to "1小时", 180 to "3小时", 1440 to "1天")
+            val isCustom = presets.none { it.first == form.remindBeforeMinutes } &&
+                form.remindBeforeMinutes > 0
+
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf(0 to "不提醒", 60 to "1小时", 180 to "3小时", 1440 to "1天").forEach { (min, label) ->
+                presets.forEach { (min, label) ->
                     FilterChip(
                         selected = form.remindBeforeMinutes == min,
                         onClick = { viewModel.update { it.copy(remindBeforeMinutes = min) } },
@@ -290,6 +300,22 @@ fun TripEditScreen(
                     )
                 }
             }
+
+            Spacer(Modifier.height(8.dp))
+
+            // 自定义按钮。已经设了自定义值时，按钮上直接显示当前值，
+            // 免得用户忘了自己设过什么
+            FilterChip(
+                selected = isCustom,
+                onClick = { showCustomRemindDialog = true },
+                label = {
+                    Text(
+                        if (isCustom) formatRemindLabel(form.remindBeforeMinutes) else "自定义",
+                        style = MaterialTheme.typography.labelMedium
+                    )
+                },
+                shape = RoundedCornerShape(8.dp)
+            )
 
             Spacer(Modifier.height(24.dp))
             PrimaryButton(
@@ -357,7 +383,69 @@ fun TripEditScreen(
             text = { TimePicker(state = timeState) }
         )
     }
+
+    // 自定义提醒时间：填一个分钟数，支持各种写法
+    if (showCustomRemindDialog) {
+        var input by remember { mutableStateOf("") }
+        // 实时算出的分钟数，null 表示输入不合法
+        val parsed = parseRemindInput(input)
+
+        AlertDialog(
+            onDismissRequest = { showCustomRemindDialog = false },
+            title = { Text("自定义提醒") },
+            text = {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        "填提前多久提醒，可以用 45分、2小时、1天 这种写法。",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    OutlinedTextField(
+                        value = input,
+                        onValueChange = { input = it },
+                        placeholder = { Text("例如 45分钟 或 8小时") },
+                        singleLine = true,
+                        isError = input.isNotBlank() && parsed == null,
+                        supportingText = {
+                            when {
+                                input.isBlank() -> Text("留空表示取消自定义")
+                                parsed == null -> Text("看不懂这个写法")
+                                parsed == 0 -> Text("提前时间必须大于 0")
+                                parsed > 60 * 24 * 30 -> Text("最多提前 30 天")
+                                else -> Text("将在出发前 ${formatRemindLabel(parsed)} 提醒")
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = parsed != null && parsed > 0 && parsed <= 60 * 24 * 30,
+                    onClick = {
+                        val minutes = parsed ?: return@TextButton
+                        viewModel.update { it.copy(remindBeforeMinutes = minutes) }
+                        showCustomRemindDialog = false
+                    }
+                ) { Text("确定") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCustomRemindDialog = false }) { Text("取消") }
+            }
+        )
+    }
 }
+
+/**
+ * 解析自定义提醒输入，返回分钟数。实现放在 RemindFormat 里，与「我的」页共用。
+ */
+private fun parseRemindInput(raw: String): Int? = RemindFormat.parse(raw)
+
+/**
+ * 把分钟数转成好读的文案，给 chip 和对话框提示用。
+ */
+private fun formatRemindLabel(minutes: Int): String = RemindFormat.label(minutes)
 
 @Composable
 private fun TimeRow(label: String, value: String, required: Boolean = false, onClick: () -> Unit) {

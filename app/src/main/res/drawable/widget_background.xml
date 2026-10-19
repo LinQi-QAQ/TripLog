@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    小组件背景：白色圆角卡片。
+    系统在 Android 12 及以上会自动给小组件套一层圆角裁剪，
+    这里自己也画圆角，保证低版本看起来一致。
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/widget_background" />
+    <corners android:radius="18dp" />
+</shape>

@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="ic_launcher_background">#FFFFFF</color>
+
+    <!-- 桌面小组件配色，与 app 内的 Material 主题保持一致的灰阶 -->
+    <color name="widget_background">#FFFFFF</color>
+    <color name="widget_text_primary">#1C1C1E</color>
+    <color name="widget_text_secondary">#6B6B70</color>
+    <color name="widget_text_tertiary">#A1A1AA</color>
+    <color name="widget_accent">#2563EB</color>
 </resources>

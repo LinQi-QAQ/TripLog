@@ -5,7 +5,7 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [Trip::class], version = 1, exportSchema = false)
+@Database(entities = [Trip::class], version = 2, exportSchema = false)
 abstract class TripDatabase : RoomDatabase() {
 
     abstract fun tripDao(): TripDao
@@ -20,8 +20,7 @@ abstract class TripDatabase : RoomDatabase() {
                     context.applicationContext,
                     TripDatabase::class.java,
                     "triplog.db"
-                ).fallbackToDestructiveMigration(dropAllTables = true)
-                    .build()
+                ).fallbackToDestructiveMigration(dropAllTables = true)                    .build()
                     .also { instance = it }
             }
     }

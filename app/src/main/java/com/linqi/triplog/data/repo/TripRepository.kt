@@ -26,22 +26,13 @@ class TripRepository(private val dao: TripDao) {
 
     suspend fun deleteByIds(ids: List<Long>) = dao.deleteByIds(ids)
 
-    /** 关键词搜索：出发地、目的地、编号、备注里包含即命中。 */
+    /**
+     * 关键词搜索 + 类型筛选，条件直接下发到 SQLite。
+     * 之前是全表加载后在内存里 filter，几千条时会卡；现在由数据库按索引筛。
+     * 关键词前后空白会被去掉，空关键词等价于不筛。
+     */
     fun search(keyword: String, filter: String? = null): Flow<List<Trip>> =
-        dao.observeAll().let { flow ->
-            kotlinx.coroutines.flow.combine(flow, kotlinx.coroutines.flow.flowOf(keyword to filter)) { list, (kw, f) ->
-                list.filter { trip ->
-                    val matchFilter = f == null || trip.vehicleType == f
-                    val kwOk = kw.isBlank() ||
-                        trip.fromStation.contains(kw, true) ||
-                        trip.toStation.contains(kw, true) ||
-                        trip.number.contains(kw, true) ||
-                        trip.note.contains(kw, true) ||
-                        trip.passenger.contains(kw, true)
-                    matchFilter && kwOk
-                }
-            }
-        }
+        dao.observeFiltered(keyword.trim(), filter)
 
     fun isVehicleType(value: String): Boolean = VehicleType.all.contains(value)
 }

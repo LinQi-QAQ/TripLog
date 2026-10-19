@@ -61,11 +61,13 @@ object StatsCalculator {
         val byType = allTypes.associateWith { type -> trips.count { it.vehicleType == type } }
             .filterValues { it > 0 }
 
+        // 城市统计统一走归一化，避免「上海虹桥」和「上海」算成两个地方
         val cities = trips.flatMap { listOf(it.fromStation, it.toStation) }
+            .map { CityNormalizer.toCity(it) }
             .filter { it.isNotBlank() }
             .toSet()
 
-        val fare = trips.sumOf { parseFare(it.price) }
+        val fare = trips.sumOf { fareOf(it) }
 
         val grouped = trips.groupBy { monthOf(it, now) }
         val months = grouped.map { (ym, list) ->
@@ -75,15 +77,18 @@ object StatsCalculator {
                 byType = allTypes.associateWith { t -> list.count { it.vehicleType == t } }
                     .filterValues { it > 0 },
                 cityCount = list.flatMap { listOf(it.fromStation, it.toStation) }
+                    .map { CityNormalizer.toCity(it) }
                     .filter { it.isNotBlank() }
                     .toSet()
                     .size,
-                totalFare = list.sumOf { parseFare(it.price) },
+                totalFare = list.sumOf { fareOf(it) },
                 trips = list.sortedByDescending { it.departTime ?: 0 }
             )
         }.sortedByDescending { it.yearMonth }
 
+        // 常去城市也按归一化后的城市计数，而不是原始站名
         val cityCounts = trips.flatMap { listOf(it.fromStation, it.toStation) }
+            .map { CityNormalizer.toCity(it) }
             .filter { it.isNotBlank() }
             .groupingBy { it }
             .eachCount()
@@ -120,16 +125,19 @@ object StatsCalculator {
     }
 
     /**
-     * 票价解析。只取数字部分，兼容「¥123.5」「123.50 CNY」「￥123」这些写法。
-     * 解析不了返回 0，不参与求和。
+     * 取一条行程的票价值。
+     *
+     * 优先用入库时算好的 priceValue；老数据或外部导入的行可能没有，
+     * 这时回退到解析 price 字符串。两者都没有就算 0，不计入求和。
      */
-    fun parseFare(raw: String): Double {
-        if (raw.isBlank()) return 0.0
-        val cleaned = raw.replace(",", "")
-            .filter { it.isDigit() || it == '.' }
-        if (cleaned.isBlank() || cleaned == ".") return 0.0
-        return cleaned.toDoubleOrNull() ?: 0.0
-    }
+    fun fareOf(trip: Trip): Double =
+        trip.priceValue ?: FareParser.parseOrZero(trip.price)
+
+    /**
+     * 票价解析，保留旧签名给已有测试和调用方用。
+     * 新代码建议直接用 [FareParser.parseOrNull]。
+     */
+    fun parseFare(raw: String): Double = FareParser.parseOrZero(raw)
 
     /** 年度筛选用：某年的行程。 */
     fun tripsOfYear(trips: List<Trip>, year: Int, now: Long = System.currentTimeMillis()): List<Trip> =

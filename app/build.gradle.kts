@@ -68,6 +68,9 @@ android {
 
     buildFeatures {
         compose = true
+        // 打开 BuildConfig，让界面能读到 VERSION_NAME，
+        // 避免版本号在界面里写死导致和 gradle 配置不同步
+        buildConfig = true
     }
 
     testOptions {

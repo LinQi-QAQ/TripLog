@@ -33,7 +33,14 @@ data class Trip(
     val arriveTime: Long? = null,
     val number: String = "",
     val seat: String = "",
+    /** 票价原文，保留用户输入的样子（「¥553」「553元」都能存）。 */
     val price: String = "",
+    /**
+     * 票价的数值形式，用于统计求和。
+     * 入库时从 [price] 解析一次并存下来，避免每次统计都重新解析字符串。
+     * 解析不出来时为 null，不参与求和（区别于 0，0 是真实的免费票）。
+     */
+    val priceValue: Double? = null,
     val passenger: String = "",
     val note: String = "",
     /** 压缩后的车票图在应用私有目录下的路径，空表示没有图。 */

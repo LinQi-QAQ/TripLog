@@ -39,6 +39,7 @@ data class EditForm(
 
     fun toTrip(): Trip {
         val now = System.currentTimeMillis()
+        val priceText = price.trim()
         return Trip(
             id = id,
             vehicleType = vehicleType,
@@ -48,7 +49,10 @@ data class EditForm(
             arriveTime = arriveTime,
             number = number.trim(),
             seat = seat.trim(),
-            price = price.trim(),
+            price = priceText,
+            // 入库时把票价解析成数值并存下来，统计直接读，不用每次重解析字符串。
+            // 解析不出来存 null，表示「没有金额」，与「0 元」区分开。
+            priceValue = com.linqi.triplog.data.stats.FareParser.parseOrNull(priceText),
             passenger = passenger.trim(),
             note = note.trim(),
             ticketImagePath = ticketImagePath,
