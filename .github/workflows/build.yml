@@ -91,6 +91,13 @@ jobs:
           files: app/build/outputs/apk/release/*.apk
           # Release 标题，v1.0.0 变成「出行记 1.0.0」
           name: 出行记 ${{ github.ref_name }}
+          # 固定正文（不写死版本号，每次发版通用），自动生成的 changelog 会接在后面
+          body: |
+            出行记 TripLog —— 记录行程的安卓应用。车票截个图丢进去，自动识别车次、时刻、席别、票价，按时间线排好。
+
+            无广告、无统计，数据只存本机。票据识别需自备 AI 接口（应用内「我的 → AI 设置」配置，兼容 OpenAI 格式）。
+
+            安装：下载下方 APK 直接安装，需 Android 8.0 及以上。
           generate_release_notes: true
           draft: false
           prerelease: false
