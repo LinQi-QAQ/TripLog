@@ -8,7 +8,7 @@
 #   git push origin v1.0.0
 # 然后去仓库主页右侧的 Releases 看一眼，包好了会出现在最新那条下面。
 #
-# 前提：仓库 Settings → Secrets and variables → Actions 里要先配好五个密钥，
+# 前提：仓库 Settings → Secrets and variables → Actions 里要先配好四个密钥，
 # 分别是 KEYSTORE_BASE64、KEYSTORE_PASSWORD、KEY_ALIAS、KEY_PASSWORD。
 # 不配的话编译这一步会直接失败，不会产出装不上的未签名包。
 # 生成 KEYSTORE_BASE64 的方法见 README 的「发布签名」一节。
@@ -28,16 +28,24 @@ jobs:
 
     steps:
       - name: 拉取代码
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: 装 JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
 
-      - name: 装 Android SDK
-        uses: android-actions/setup-android@v3
+      # GitHub 的 ubuntu runner 自带 Android SDK（ANDROID_HOME 已配好），
+      # 不再用第三方 setup-android action——它会在这一步直接失败，
+      # 而且这一步挂掉之后签名、编译、发 Release 全都会被跳过。
+      # 这里只用自带的 sdkmanager 补装本项目需要的组件。
+      - name: 装 Android SDK 组件
+        run: |
+          set -e
+          yes | sdkmanager --licenses > /dev/null
+          sdkmanager "platforms;android-36" "build-tools;36.0.0"
+          sdkmanager --list_installed
 
       # 密钥库是从 base64 还原出来的，密码等配置写成 keystore.properties。
       # 这个文件在 .gitignore 里，不会被提交，只存在于构建环境。
