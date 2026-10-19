@@ -23,8 +23,10 @@ android {
         applicationId = "com.linqi.triplog"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0.0"
+        // versionCode 必须递增，否则系统拒绝覆盖安装，报「应用未安装」。
+        // versionName 只是给人看的，跟随语义化版本号即可。
+        versionCode = 2
+        versionName = "1.1.0"
         // 插桩测试的运行器。不写这一行，测试 APK 里不会注册 instrumentation，
         // adb am instrument 会报 "Unable to find instrumentation info"。
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
