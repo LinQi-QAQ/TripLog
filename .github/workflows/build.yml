@@ -50,7 +50,10 @@ jobs:
           "$SDKMANAGER" --list_installed
 
       # 密钥库是从 base64 还原出来的，密码等配置写成 keystore.properties。
-      # 这个文件在 .gitignore 里，不会被提交，只存在于构建环境。
+      # keystore.properties 放在仓库根目录（build 脚本从 rootProject 读取），
+      # 但 release.jks 必须放在 app/ 目录下——因为 build.gradle.kts 里
+      # storeFile = file(...) 是相对于 app 模块目录解析的。
+      # 这两个文件都只存在于构建环境，不会被提交。
       - name: 还原签名文件
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
@@ -63,14 +66,14 @@ jobs:
             echo "::error::缺少 KEYSTORE_BASE64，去仓库 Settings → Secrets 里配好再跑"
             exit 1
           fi
-          echo "$KEYSTORE_BASE64" | base64 -d > "$GITHUB_WORKSPACE/release.jks"
+          echo "$KEYSTORE_BASE64" | base64 -d > "$GITHUB_WORKSPACE/app/release.jks"
           {
             echo "storeFile=release.jks"
             echo "storePassword=$KEYSTORE_PASSWORD"
             echo "keyAlias=$KEY_ALIAS"
             echo "keyPassword=$KEY_PASSWORD"
           } > "$GITHUB_WORKSPACE/keystore.properties"
-          ls -l "$GITHUB_WORKSPACE/release.jks"
+          ls -l "$GITHUB_WORKSPACE/app/release.jks"
 
       - name: 给 gradlew 执行权限
         run: chmod +x ./gradlew
